@@ -1,0 +1,13 @@
+services:
+  gedmo.listener.tree:
+    class: Gedmo\Tree\TreeListener
+    tags:
+      - { name: doctrine.event_subscriber, connection: default }
+    calls:
+      - [ setAnnotationReader, [ "@annotation_reader" ] ]
+
+  Gedmo\Loggable\LoggableListener:
+    tags:
+      - { name: doctrine.event_subscriber, connection: default }
+    calls:
+      - [ setAnnotationReader, [ "@annotation_reader" ] ]

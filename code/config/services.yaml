@@ -1,0 +1,28 @@
+
+parameters:
+    #Répertoir de stockage des fichiers de la gestion contractuelle
+    contrat_pj_directory: '%kernel.project_dir%/public/uploads/contrat_pj'
+    contrat_pj_directory_client: '/uploads/contrat_pj'
+
+
+    #Répertoir de stockage des fichiers de la base documentaire
+    base_doc_directory: '%kernel.project_dir%/public/uploads/base_doc'
+    base_doc_directory_client: '/uploads/base_doc'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+
+    Gedmo\Loggable\LoggableListener:
+        tags:
+            - { name: doctrine.event_subscriber, priority: -10 }
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'

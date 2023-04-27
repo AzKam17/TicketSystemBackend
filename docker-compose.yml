@@ -1,0 +1,48 @@
+###############################################################################
+#                          Generated on phpdocker.io                          #
+###############################################################################
+version: '3.1'
+services:
+    mariadb:
+        image: 'mariadb:10.6'
+        working_dir: /application
+        environment:
+            - MYSQL_ROOT_PASSWORD=qwerty
+            - MYSQL_DATABASE=e_ticket
+            - MYSQL_USER=redoc_azk
+            - MYSQL_PASSWORD=qwerty
+        ports:
+            - '45003:3306'
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        restart: always
+        ports:
+            - "45002:80"
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=mariadb
+            - PMA_USER=redoc_azk
+            - PMA_PASSWORD=qwerty
+
+    webserver:
+        image: 'nginx:alpine'
+        working_dir: /application
+        volumes:
+            - './code:/application'
+            - './phpdocker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf'
+        ports:
+            - '45000:80'
+
+    php-fpm:
+        build: phpdocker/php-fpm
+        working_dir: /application
+        #Wait for the database to be ready
+        depends_on:
+            - mariadb
+        volumes:
+            - './code:/application'
+            - './phpdocker/php-fpm/php-ini-overrides.ini:/etc/php/8.1/fpm/conf.d/99-overrides.ini'
+        #Bridge to host network
+        extra_hosts:
+            - "host.docker.internal:host-gateway"

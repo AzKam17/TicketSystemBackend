@@ -1,0 +1,5 @@
+/.docker
+/openldap-config
+/openldap-data
+/openldap-ldif
+/.idea

@@ -1,0 +1,240 @@
+framework:
+    workflows:
+#        # State machine pour les demandes de contrat
+#        # Les états sont :
+#        # - created : la demande a été créée
+#        # - pending_manager_approval : la demande est en attente de validation du manager
+#        # - pending_legal_department_manager_approval : la demande est en attente de validation du manager juridique
+#        # - pending_agent_approval : la demande est en attente de validation de l'agent juridique
+#        # - approved : la demande est validée
+#        # - rejected_by_manager : la demande a été rejetée par le manager
+#        # - rejected_by_legal_department_manager : la demande a été rejetée par le manager juridique
+#        # - rejected_by_agent : la demande a été rejetée par l'agent juridique
+#        # Pour les permissions, on a :
+#        # - owner : le propriétaire de la demande
+#        # - manager : le manager de l'agent
+#        # - manager_juridique : le manager juridique
+#        # - user_juridique : l'agent juridique
+#        # Pour chaque état, on a :
+#        # - edit : permet de modifier la demande
+#        # - remove : permet de supprimer la demande
+#        # - approve : permet de valider la demande
+#        # - approve_manager : permet de transférer la demande au manager juridique
+#        # - transfer : permet de transférer la demande à un autre agent juridique pour validation
+#        contract_request:
+#            type: state_machine
+#            marking_store:
+#                type: method
+#                property: currentState
+#            supports:
+#                - App\Entity\Contrat\Contrat
+#            initial_marking: created
+#            places:
+#                created:
+#                    metadata:
+#                        label: Demande créée
+#                        color: blue
+#                pending_manager_approval:
+#                    metadata:
+#                        label: En attente de validation du manager
+#                        color: default
+#                        permissions:
+#                            owner:
+#                                edit: true
+#                                remove: true
+#                            manager:
+#                                approve_manager: true
+#                                edit: true
+#                            manager_juridique:
+#                                - none
+#                            user_juridique:
+#                                - none
+#                pending_legal_department_manager_approval:
+#                    metadata:
+#                        label: En attente de validation du manager juridique
+#                        color: primary
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                approve: true
+#                                edit: true
+#                                transfer: true
+#                            user_juridique:
+#                                - none
+#                pending_agent_approval:
+#                    metadata:
+#                        label: En attente de validation de l'agent
+#                        color: secondary
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                - none
+#                            user_juridique:
+#                                approve: true
+#                                edit: true
+#                approved:
+#                    metadata:
+#                        label: Validé
+#                        color: success
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                edit: true
+#                            user_juridique:
+#                                edit: true
+#                rejected_by_manager:
+#                    metadata:
+#                        label: Rejeté par le manager
+#                        color: danger
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                - none
+#                            user_juridique:
+#                                - none
+#                rejected_by_legal_department_manager:
+#                    metadata:
+#                        label: Rejeté par le manager juridique
+#                        color: danger
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                - none
+#                            user_juridique:
+#                                - none
+#                rejected_by_agent:
+#                    metadata:
+#                        label: Rejeté par l'agent juridique
+#                        color: danger
+#                        permissions:
+#                            owner:
+#                                - none
+#                            manager:
+#                                - none
+#                            manager_juridique:
+#                                - none
+#                            user_juridique:
+#                                - none
+#            transitions:
+#                submit:
+#                    from: created
+#                    to: pending_manager_approval
+#                    metadata:
+#                        label_color: "bg-sky-100 text-sky-600"
+#                        title: "Création de la demande de contrat"
+#                        description: "La demande de contrat a été créée par l'agent"
+#                submit_by_juridique:
+#                    from: created
+#                    to: approved
+#                    metadata:
+#                        label_color: "bg-amber-100 text-amber-600"
+#                        title: "Création d'un contrat"
+#                        description: "Un contrat a été créé par l'agent juridique"
+#                submit_by_manager:
+#                    from: created
+#                    to: pending_legal_department_manager_approval
+#                    metadata:
+#                        label_color: "bg-amber-100 text-amber-600"
+#                        title: "Création d'une demande de contrat"
+#                        description: "Une demande de contrat a été créée par le manager"
+#                approve_manager:
+#                    from: pending_manager_approval
+#                    to: pending_legal_department_manager_approval
+#                    metadata:
+#                        label_color: "bg-emerald-100 text-emerald-600"
+#                        title: "Validation du manager"
+#                        description: "Demande transmise au département juridique, validation effectuée par"
+#                approve_legal_department:
+#                    from: pending_legal_department_manager_approval
+#                    to: approved
+#                    metadata:
+#                        label_color: "bg-amber-100 text-amber-600"
+#                        title: "Validation de la demande de contrat"
+#                        description: "Validation de la demande de contrat par le département juridique. -"
+#                reassign_to_agent:
+#                    from: pending_legal_department_manager_approval
+#                    to: pending_agent_approval
+#                    metadata:
+#                        label_color: "bg-emerald-100 text-emerald-600"
+#                        title: "Demande attribuée à un agent"
+#                        description: "Demande attribuée et en attente de validation par"
+#                approve_agent:
+#                    from: pending_agent_approval
+#                    to: approved
+#                    metadata:
+#                        label_color: "bg-amber-100 text-amber-600"
+#                        title: "Validation de la demande de contrat"
+#                        description: "Demande de contrat validée par le département juridique. -"
+#                reject_manager:
+#                    from: pending_manager_approval
+#                    to: rejected_by_manager
+#                    metadata:
+#                        label_color: "bg-rose-100 text-rose-600"
+#                        title: "Rejet de la demande de contrat"
+#                        description: "Rejet de la demande de contrat par le manager"
+#                reject_legal_department:
+#                    from: pending_legal_department_manager_approval
+#                    to: rejected_by_legal_department_manager
+#                    metadata:
+#                        label_color: "bg-rose-100 text-rose-600"
+#                        title: "Rejet de la demande de contrat"
+#                        description: "Rejet de la demande de contrat par le service juridique -"
+#                reject_agent:
+#                    from: pending_agent_approval
+#                    to: rejected_by_agent
+#                    metadata:
+#                        label_color: "bg-rose-100 text-rose-600"
+#                        title: "Rejet de la demande de contrat"
+#                        description: "Rejet de la demande de contrat par le service juridique -"
+#
+#        # State machine pour les documents de la base documentaire
+#        # Les états sont :
+#        # - visible : le document est visible dans la base documentaire
+#        # - deleted : le document est supprimé de la base documentaire
+#        base_documentaire:
+#            type: state_machine
+#            marking_store:
+#                type: method
+#                property: currentState
+#            supports:
+#                - App\Entity\BaseDocumentaire\Document
+#            initial_marking: visible
+#            places:
+#                visible:
+#                    metadata:
+#                        label: Disponible
+#                        color: success
+#                deleted:
+#                    metadata:
+#                        label: Supprimé
+#                        color: danger
+#            transitions:
+#                delete:
+#                    from: visible
+#                    to: deleted
+#                    metadata:
+#                        label_color: "bg-rose-100 text-rose-600"
+#                        title: "Suppression d'un document"
+#                        description: "Suppression du document de la base documentaire"
+#                restore:
+#                    from: deleted
+#                    to: visible
+#                    metadata:
+#                        label_color: "bg-emerald-100 text-emerald-600"
+#                        title: "Restauration d'un document"
+#                        description: "Restauration du document dans la base documentaire"
