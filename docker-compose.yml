@@ -25,6 +25,10 @@ services:
             - PMA_USER=redoc_azk
             - PMA_PASSWORD=qwerty
 
+    redis:
+        image: redis
+        restart: always
+
     webserver:
         image: 'nginx:alpine'
         working_dir: /application

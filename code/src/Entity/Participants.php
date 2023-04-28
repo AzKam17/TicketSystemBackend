@@ -36,6 +36,9 @@ class Participants implements CreatedAtTimestampableInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $scannedAt = null;
 
+    #[ORM\Column]
+    private ?bool $isMailSended = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -109,6 +112,18 @@ class Participants implements CreatedAtTimestampableInterface
     public function setScannedAt(?\DateTimeImmutable $scannedAt): self
     {
         $this->scannedAt = $scannedAt;
+
+        return $this;
+    }
+
+    public function isIsMailSended(): ?bool
+    {
+        return $this->isMailSended;
+    }
+
+    public function setIsMailSended(bool $isMailSended): self
+    {
+        $this->isMailSended = $isMailSended;
 
         return $this;
     }

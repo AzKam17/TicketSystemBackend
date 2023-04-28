@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import { toast } from 'react-toastify';
 
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
@@ -41,6 +42,8 @@ function Home() {
 	const [stats, setStats] = useState([]);
 	const [userModalData, setUserModalData] = useState(null);
 	const [file, setFile] = useState(null);
+	const [maillingDone, setMaillingDone] = useState(false);
+	const [maillingStatus, setMaillingStatus] = useState(null);
 
 	useEffect(() => {
 		// Call api /api/participants to get all participants
@@ -65,6 +68,15 @@ function Home() {
 	useEffect(() => {
 		setUserModalData(null);
 	}, [showParticipantModal]);
+
+	// Every 5 seconds, check if the mailing is done
+	useEffect(() => {
+		getMailingStatus();
+		const interval = setInterval(() => {
+			getMailingStatus();
+		}, 2000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const Loader = () => {
 		return (
@@ -93,13 +105,41 @@ function Home() {
 				}
 			})
 			.then((res) => {
-				alert(res.data.message);
-				window.location.reload();
+				toast.success(res.data.message);
+				setNewSub(!newSub);
+				// refresh after 2s
+				setTimeout(() => {
+					window.location.reload();
+				}, 2000);
 			})
 			.catch((err) => {
 				alert(err.response.data.message);
 			});
 
+	}
+
+	const getMailingStatus = () => {
+		axios
+			.get('/api/participants/mail/status')
+			.then((res) => {
+				// Get key is_done from response
+				setMaillingDone(res.data.is_done);
+				setMaillingStatus(res.data.result);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	const sendAllMails = () => {
+		axios
+			.get('/api/participants/mail/all')
+			.then((res) => {
+				toast.success('Les mails sont en cours d\'envoi');
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	}
 
 	return (
@@ -149,7 +189,7 @@ function Home() {
 								</a>
 
 
-									<button className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
+									<button className="btn bg-indigo-500 hover:bg-indigo-600 text-white mr-2">
 										<svg
 											className="w-4 h-4 fill-current opacity-50 shrink-0"
 											viewBox="0 0 16 16"
@@ -164,6 +204,34 @@ function Home() {
 											}}
 										>
 											Ajouter une nouvelle personne.
+										</span>
+									</button>
+
+									<button className={
+										`btn mr-2 ${
+											maillingDone ? 'cursor-not-allowed bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-white hover:bg-gray-100 text-gray-800'
+										}`
+									}>
+										{/* Check mark svg */}
+										<svg
+											className="w-4 h-4 fill-current opacity-50 shrink-0"
+											viewBox="0 0 16 16"
+										>
+											<path
+												fillRule="evenodd"
+												d="M6.5 11.793l-3.146-3.147a.5.5 0 01.708-.708L6.5 10.38l5.938-5.94a.5.5 0 11.707.707L6.5 11.793z"
+											/>
+										</svg>
+										<span
+											className="hidden xs:block ml-2"
+											onClick={(e) => {
+												e.stopPropagation();
+												if (!maillingDone) sendAllMails();
+											}}
+										>
+											{
+												maillingDone ? 'Les mails ont été envoyés'  : `Envoyer les mails d'invitation. Progression : ${maillingStatus}`
+											}
 										</span>
 									</button>
 								</div>
@@ -288,6 +356,42 @@ function Home() {
 														<span className="font-bold">Informations additionnelles: </span>
 														<span>{userModalData.addFields}</span>
 													</li>
+													{/* Button to send mail */}
+													{
+														userModalData.isNotified ? (
+															<li>
+																<span className="font-bold">
+																	Mail envoyé:
+																</span>
+																<span>Oui</span>
+															</li>
+														) : (
+													<li className={`flex flex-row items-center justify-center`}>
+														<span>
+															<button className="btn bg-indigo-500 hover:bg-indigo-600 text-white" onClick={() => {
+																axios
+																	.get('/api/participants/mail/' + userModalData.id)
+																	.then(res => {
+																		toast.success('Mail envoyé avec succès');
+																		// refresh
+																		setShowParticipantModal(null);
+																		setUserModalData(null);
+																	} );
+															}}>
+																<svg
+																	className="w-4 h-4 fill-current opacity-50 shrink-0"
+																	viewBox="0 0 16 16"
+																>
+																	<path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
+																</svg>
+																<span className="hidden xs:block ml-2">
+																	Envoyer un mail
+																</span>
+															</button>
+														</span>
+													</li>
+														)
+													}
 													</>
 												)
 

@@ -3,13 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\Participants;
+use App\Message\QRNotification;
+use App\Message\QRNotificationAll;
 use App\Repository\ParticipantsRepository;
+use App\Service\GetQRService;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\BuilderInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Uid\Uuid;
@@ -133,15 +137,11 @@ class ParticipantsController extends AbstractController
     #[Route('/participants/infos/{id}', name: 'app_participants_show', methods: ['GET'])]
     public function show(
         Participants $participant,
-        BuilderInterface $qrCodeBuilder
+        GetQRService $getQRService,
     ): Response
     {
-        $qrCode = $qrCodeBuilder
-            ->data(
-                // ABJ# Followed by the participant's qr
-                'ABJ#' . $participant->getQr()
-            )
-            ->build()->getDataUri();
+
+        $qrCode = ($getQRService)($participant)->getDataUri();
         return new Response(
             json_encode(
                 [
@@ -155,6 +155,7 @@ class ParticipantsController extends AbstractController
                     ],
                     'subbedAt' => $participant->getCreatedAt()->format('d/m/Y à H:i:s'),
                     'addFields' => $participant->getAddFields(),
+                    'isNotified' => $participant->isIsMailSended(),
                 ]
             )
             , Response::HTTP_OK, ['Content-Type' => 'application/json']
@@ -347,7 +348,7 @@ class ParticipantsController extends AbstractController
         );
     }
 
-
+    // Set participant as scanned
     #[Route('/participants/qr/valid/{id}', name: 'app_participants_qr_valid', methods: ['GET'])]
     public function qrValid(
         Participants $participant,
@@ -369,4 +370,77 @@ class ParticipantsController extends AbstractController
             , Response::HTTP_OK, ['Content-Type' => 'application/json']
         );
     }
+
+    // Send mail to participant, if user not found return error
+    #[Route(
+        '/participants/mail/{id}',
+        name: 'app_participants_mail',
+        requirements: ['id' => '\d+'],
+        methods: ['GET'])
+    ]
+    public function mail(
+        Participants $participant,
+        MessageBusInterface $messageBus,
+    ): Response
+    {
+        $message = new QRNotification($participant);
+        $messageBus->dispatch($message);
+
+        return new Response(
+            json_encode(
+                [
+                    'result' => 'ok'
+                ]
+            )
+            , Response::HTTP_OK, ['Content-Type' => 'application/json']
+        );
+    }
+
+    // Send mail to all participants
+    #[Route('/participants/mail/all', name: 'app_participants_mail_all', methods: ['GET'])]
+    public function mailAll(
+        MessageBusInterface $messageBus,
+    ): Response
+    {
+        $message = new QRNotificationAll();
+        $messageBus->dispatch($message);
+
+        return new Response(
+            json_encode(
+                [
+                    'result' => 'ok'
+                ]
+            )
+            , Response::HTTP_OK, ['Content-Type' => 'application/json']
+        );
+    }
+
+    // Status of mail to all participants in percentage
+    #[Route('/participants/mail/status', name: 'app_participants_mail_status', methods: ['GET'])]
+    public function mailStatus(
+        EntityManagerInterface $entityManager,
+    ): Response
+    {
+        /** @var Participants[] $participants */
+        $participants = $entityManager->getRepository(Participants::class)->findAll();
+        $participantsCount = count($participants);
+        $participantsScannedCount = 0;
+        foreach ($participants as $participant) {
+            if ($participant->isIsMailSended()) {
+                $participantsScannedCount++;
+            }
+        }
+
+        return new Response(
+            json_encode(
+                [
+                    'is_done' => $participantsCount === $participantsScannedCount,
+                    'result' => $participantsScannedCount . '/' . $participantsCount . ' (' . round($participantsScannedCount / $participantsCount * 100, 2) . '%)'
+                ]
+            )
+            , Response::HTTP_OK, ['Content-Type' => 'application/json']
+        );
+    }
+
+
 }

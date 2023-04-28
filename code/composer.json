@@ -44,6 +44,7 @@
         "symfony/proxy-manager-bridge": "6.1.*",
         "symfony/runtime": "6.1.*",
         "symfony/security-bundle": "6.1.*",
+        "symfony/sendinblue-mailer": "6.1.*",
         "symfony/serializer": "6.1.*",
         "symfony/string": "6.1.*",
         "symfony/translation": "6.1.*",
@@ -114,7 +115,6 @@
             "php bin/console d:d:d --force --if-exists",
             "php bin/console d:d:c",
             "php bin/console d:s:c",
-            "php bin/console d:f:l --no-interaction",
             "composer run-script auto-scripts"
         ]
     },
