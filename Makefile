@@ -28,7 +28,7 @@ node-build:
 	docker compose exec node yarn build
 messenger-mail:
 	clear
-	docker compose exec www php bin/console messenger:consume async -vv
+	docker compose exec www php bin/console messenger:consume async -vv --time-limit=3600
 fixtures:
 	docker compose exec -u 1000 www php bin/console d:f:l --no-interaction
 migration:
