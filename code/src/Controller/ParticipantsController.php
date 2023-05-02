@@ -339,7 +339,6 @@ class ParticipantsController extends AbstractController
 
             $participants = [];
             for ($i = 2; $i <= $highestRow; $i++) {
-                dump($sheet->getCell('I' . $i)->getValue());
                 $participant = ($createParticipantService)(
                     [
                         'nom' => $sheet->getCell('A' . $i)->getValue(),
@@ -350,7 +349,7 @@ class ParticipantsController extends AbstractController
                         'telephone' => $sheet->getCell('F' . $i)->getValue(),
                         'secteur' => $sheet->getCell('G' . $i)->getValue(),
                         'gender' => $sheet->getCell('H' . $i)->getValue() === 'H',
-                        'horaire' => 'morning',
+                        'horaire' => $sheet->getCell('I' . $i)->getValue() ?? 'morning',
                     ]
                 );
 
@@ -369,7 +368,6 @@ class ParticipantsController extends AbstractController
 
                 $participants[] = $participant;
             }
-            dump($participants);
 
             $entityManager->getConnection()->beginTransaction();
             try {
