@@ -30,6 +30,8 @@ class QRNotificationHandler
     public function __invoke(QRNotification $notification)
     {
         try {
+            // Add delay 500 ms
+            sleep(0.5);
             // Get the participant from the notification
             $participant = $notification->getParticipant();
             // fetch the participant from the database

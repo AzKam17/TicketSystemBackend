@@ -282,7 +282,6 @@ class ParticipantsController extends AbstractController
         $sheet->setCellValue('M1', 'Heure de scan');
 
         $i = 2;
-        $scannedPerHour = [];
         foreach ($participantsRepository->findAll() as $participant) {
             $sheet->setCellValue('A' . $i, $participant->getId());
             $sheet->setCellValue('B' . $i, $participant->getNom());
@@ -298,27 +297,8 @@ class ParticipantsController extends AbstractController
             $sheet->setCellValue('K' . $i, $participant->isIsScanned() ? 'Oui' : 'Non');
             $sheet->setCellValue('L' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('d/m/Y') : '');
             $sheet->setCellValue('M' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('H:i:s') : '');
-
-            // Store user scanned per hour for bar chart
-            $hour = $participant->getScannedAt() ? $participant->getScannedAt()->format('H') : '';
-            if (isset($scannedPerHour[$hour])) {
-                $scannedPerHour[$hour]++;
-            } else {
-                $scannedPerHour[$hour] = 1;
-            }
-
             $i++;
         }
-
-        // Draw bar chart on second sheet, scanned participants by hour
-        $sheet2 = $spreadsheet->createSheet();
-        $sheet2->setTitle('Participants scannés par heure');
-        $sheet2->fromArray(
-
-
-
-
-
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('participants.xlsx');
