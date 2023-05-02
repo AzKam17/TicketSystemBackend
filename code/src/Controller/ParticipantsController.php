@@ -339,6 +339,9 @@ class ParticipantsController extends AbstractController
 
             $participants = [];
             for ($i = 2; $i <= $highestRow; $i++) {
+                if(!$sheet->getCell('A' . $i)->getValue()) {
+                    continue;
+                }
                 $participant = ($createParticipantService)(
                     [
                         'nom' => $sheet->getCell('A' . $i)->getValue(),
