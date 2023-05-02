@@ -80,7 +80,7 @@ class ParticipantsController extends AbstractController
                         'order' => 'ASC'
                     ],
                     'entreprise' => [
-                        'title' => 'Fonction',
+                        'title' => 'Entreprise',
                         'display' => true,
                         'type' => 'string',
                         'order' => 'ASC'
@@ -163,18 +163,12 @@ class ParticipantsController extends AbstractController
     #[Route('/participants/qr/{id}', name: 'app_participants_qr', methods: ['GET'])]
     public function qr(
         Participants $participant,
-        BuilderInterface $qrCodeBuilder
+        GetQRService $qrCodeBuilder
     ): Response
     {
         //Download name must be the participant's name followed by the participant's id separated by a dash
         //Transform user name to lowercase and replace spaces with dashes
-        $qrCode = $qrCodeBuilder
-            ->data(
-                // ABJ# Followed by the participant's qr
-                'ABJ#' . $participant->getQr()
-            )
-            ->build()
-        ;
+        $qrCode = ($qrCodeBuilder)($participant);
 
 
         return new Response(
