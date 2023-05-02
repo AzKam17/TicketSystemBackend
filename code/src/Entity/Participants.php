@@ -17,7 +17,8 @@ class Participants implements CreatedAtTimestampableInterface
 
     const horaireLib = [
         'morning' => "session du matin, de 08h à 12h",
-        'afternoon' => "session de l'après-midi, de 14h à 18h"
+        'afternoon' => "session de l'après-midi, de 14h à 18h",
+        'all' => 'session du matin et de l\'après-midi',
     ];
 
     #[ORM\Id]

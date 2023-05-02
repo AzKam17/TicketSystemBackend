@@ -63,6 +63,7 @@ class QRNotificationHandler
                     'name' => $participant->getPrenoms() . ' ' . $participant->getNom(),
                     'qrCode' => $this->getQRService->getContent($participant),
                     'time' => Participants::horaireLib[$participant->getHoraire()],
+                    'all_time' => $participant->getHoraire() !== 'all',
                 ])
             ;
             $this->mailer->send($mail);

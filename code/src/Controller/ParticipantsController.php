@@ -121,10 +121,12 @@ class ParticipantsController extends AbstractController
                             'gender' => $Participants->isGender() ? 'Homme' : 'Femme',
                             'fonction' => $Participants->getFonction(),
                             'entreprise' => $Participants->getEntreprise(),
-                            'horaire' => $Participants->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                            'horaire' => $Participants->getHoraire() === 'morning' ? 'Matin' : (
+                            $Participants->getHoraire() === 'afternoon' ? 'Après-midi' : 'Toute la journée'
+                            ),
                             'secteur' => $Participants->getSecteur(),
                             'currentState' => [
-                                'label' => ($Participants->isIsScanned() ? 'Scanné' : 'Non scanné') . ' - ' . ($Participants->getHoraire() == 'morning' ? 'Matin' : 'Après-midi'),
+                                'label' => ($Participants->isIsScanned() ? 'Scanné' : 'Non scanné') . ' - ' . ($Participants->getHoraire() == 'morning' ? 'Matin' : ($Participants->getHoraire() == 'afternoon' ? 'Après-midi' : 'Toute la journée')),
                                 'color' => $Participants->isIsScanned() ? 'success' : 'default'
                             ],
                             'subbedAt' => $Participants->getCreatedAt()->format('d/m/Y à H:i:s'),
@@ -230,7 +232,9 @@ class ParticipantsController extends AbstractController
                         ],
                         'horaire' => [
                             'name' => 'Horaire',
-                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : (
+                            $participant->getHoraire() === 'afternoon' ? 'Après-midi' : 'Toute la journée'
+                            ),
                         ],
                     ],
                     'isNotified' => $participant->isIsMailSended(),
@@ -287,7 +291,9 @@ class ParticipantsController extends AbstractController
             $sheet->setCellValueExplicit('G' . $i, $participant->getTelephone(), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue('H' . $i, $participant->getSecteur());
             $sheet->setCellValue('I' . $i, $participant->isGender() ? 'Homme' : 'Femme');
-            $sheet->setCellValue('J' . $i, $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi');
+            $sheet->setCellValue('J' . $i, $participant->getHoraire() === 'morning' ? 'Matin' : (
+                $participant->getHoraire() === 'afternoon' ? 'Après-midi' : 'Toute la journée'
+            ));
             $sheet->setCellValue('K' . $i, $participant->isIsScanned() ? 'Oui' : 'Non');
             $sheet->setCellValue('L' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('d/m/Y') : '');
             $sheet->setCellValue('M' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('H:i:s') : '');
@@ -470,7 +476,9 @@ class ParticipantsController extends AbstractController
                         ],
                         'horaire' => [
                             'name' => 'Horaire',
-                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : (
+                            $participant->getHoraire() === 'afternoon' ? 'Après-midi' : 'Journée'
+                            )
                         ],
                     ],
                     'is_scanned' => $participant->isIsScanned() ? 'Scanné' : 'Non scanné',
