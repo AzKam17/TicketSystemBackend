@@ -203,7 +203,7 @@ function Home() {
 												setNewSub(true);
 											}}
 										>
-											Ajouter une nouvelle personne.
+											Ajouter un fichier.
 										</span>
 									</button>
 
@@ -260,7 +260,7 @@ function Home() {
 							id="feedback-modal"
 							modalOpen={newSub}
 							setModalOpen={() => setNewSub(null)}
-							title={`Ajouter un nouveau participant.`}
+							title={`Ajouter un fichier`}
 							isHeaderSticky={true}
 						>
 							<div className="px-5 pt-4 pb-1">
@@ -351,11 +351,23 @@ function Home() {
 														<span className="font-bold">Inscrit à: </span>
 														<span>{userModalData.subbedAt}</span>
 													</li>
-
-													<li>
-														<span className="font-bold">Informations additionnelles: </span>
-														<span>{userModalData.addFields}</span>
-													</li>
+													{/*
+														Loop through userModalData.addFields,
+														this is an object each key contain an object
+														where name is the key and value is the value to display
+													*/}
+													{
+														userModalData.addFields ? (
+															Object.keys(userModalData.addFields).map((key, index) => {
+																return (
+																	<li key={index}>
+																		<span className="font-bold">{userModalData.addFields[key].name}: </span>
+																		<span>{userModalData.addFields[key].value}</span>
+																	</li>
+																)
+															} )
+														) : null
+													}
 													{/* Button to send mail */}
 													{
 														userModalData.isNotified ? (

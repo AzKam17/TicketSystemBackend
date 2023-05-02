@@ -18,16 +18,16 @@ class GetQRService
     public function __invoke(Participants $participant): \Endroid\QrCode\Writer\Result\ResultInterface
     {
         return $this->qrCodeBuilder
-            ->size(300)
+            ->size(500)
             ->encoding(new Encoding('UTF-8'))
             ->errorCorrectionLevel(new ErrorCorrectionLevelHigh())
-            ->margin(30)
+            ->margin(10)
             // set path to logo, logo is in public/images/rfr.png
             ->logoPath(
                 __DIR__ . '/../../public/images/rfr.png'
             )
             ->logoPunchoutBackground(true)
-            ->logoResizeToHeight(100)
+            ->logoResizeToHeight(150)
 
             ->data(
                 $this->getContent($participant)

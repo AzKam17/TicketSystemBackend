@@ -11,6 +11,8 @@ services:
             - MYSQL_DATABASE=e_ticket
             - MYSQL_USER=redoc_azk
             - MYSQL_PASSWORD=qwerty
+        volumes:
+            - './.data/db:/var/lib/mysql'
         ports:
             - '45003:3306'
 

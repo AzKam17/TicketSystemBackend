@@ -2,6 +2,7 @@
 
 namespace App\MessageHandler;
 
+use App\Entity\Participants;
 use App\Message\QRNotification;
 use App\Repository\ParticipantsRepository;
 use App\Service\GetQRService;
@@ -9,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Part\DataPart;
 
@@ -34,10 +36,12 @@ class QRNotificationHandler
             $participant = $this->participantsRepository->find($participant);
             // send the mail
             $mail = (new TemplatedEmail())
-                ->from('azizkamadou17@gmail.com')
+                ->from(
+                    new Address('crp@bloomfield-investment.com', 'Bloomfield Investment Corporation')
+                )
                 ->to($participant->getMail())
                 ->subject('LES CONFÉRENCES RISQUE PAYS BLOOMFIELD | Votre invitation')
-                ->htmlTemplate('mails/qr_mail.html.twig')
+                ->htmlTemplate('mails/new_qr_mail.html.twig')
                 // generate the QR code and attach it to the mail
                 ->attachPart(
                     (new DataPart(
@@ -45,10 +49,18 @@ class QRNotificationHandler
                         'qr_code',
                         'image/png'
                     ))->asInline()
+                )->attachPart(
+                    (new DataPart(
+                        // dsfds.png in images in public folder
+                        (fopen(__DIR__ . '/../../public/images/dsfds.png', 'r')),
+                        'banner',
+                        'image/png'
+                    ))->asInline()
                 )
                 ->context([
-                    'noms' => $participant->getNoms(),
-                    'qrCode' => $this->getQRService->getContent($participant)
+                    'name' => $participant->getPrenoms() . ' ' . $participant->getNom(),
+                    'qrCode' => $this->getQRService->getContent($participant),
+                    'time' => Participants::horaireLib[$participant->getHoraire()],
                 ])
             ;
             $this->mailer->send($mail);

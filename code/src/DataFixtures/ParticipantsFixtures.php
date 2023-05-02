@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Participants;
+use App\Service\CreateParticipantService;
 use Carbon\Carbon;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -12,31 +13,48 @@ class ParticipantsFixtures extends Fixture
     public $faker;
 
     // Use fzanioti's FakerBundle to generate fake data
-    public function __construct()
+    public function __construct(
+        private CreateParticipantService $createParticipantService
+    )
     {
-        $this->faker = \Faker\Factory::create();
+        $this->faker = \Faker\Factory::create('en_US');
     }
 
     public function load(ObjectManager $manager): void
     {
         for($i = 0; $i < 100; $i++){
-            $isScanned = mt_rand(0, 1) == 1 ? true : false;
-            $p = (new Participants())
-            ->setNoms($this->faker->name())
-            ->setMail($this->faker->email())
-            ->setQr($this->faker->uuid())
-            ->setIsScanned(
-                $isScanned
-            )
-            ->setScannedAt(
-                // Create a datetime between 2020-01-01 and now with faker and convert it to datetimeimmutable with Carbon
-                $isScanned ? (Carbon::instance($this->faker->dateTimeBetween('-1 years', 'now')))->toDateTimeImmutable() : null
-            )
-            ->setAddFields("qwdqwd")
+            $p = $this->createParticipantService->__invoke($this->generateData());
             ;
             $manager->persist($p);
         }
 
         $manager->flush();
+    }
+
+
+    public function generateData() {
+        return [
+            'nom_prenoms' => $this->faker->name,
+            'mail' => $this->faker->email,
+            'gender' => $this->faker->randomElement([true, false]),
+            'additionnalFields' => [
+                'secteur' => [
+                    'name' => 'Secteur',
+                    'value' => $this->faker->randomElement(['Privé', 'Public']),
+                ],
+                'phone' => [
+                    'name' => 'Téléphone',
+                    'value' => $this->faker->phoneNumber,
+                ],
+                'company' => [
+                    'name' => 'Entreprise',
+                    'value' => $this->faker->company,
+                ],
+                'fonction' => [
+                    'name' => 'Fonction',
+                    'value' => $this->faker->word,
+                ],
+            ]
+        ];
     }
 }

@@ -6,6 +6,7 @@ use App\Entity\Participants;
 use App\Message\QRNotification;
 use App\Message\QRNotificationAll;
 use App\Repository\ParticipantsRepository;
+use App\Service\CreateParticipantService;
 use App\Service\GetQRService;
 use Doctrine\ORM\EntityManagerInterface;
 use Endroid\QrCode\Builder\BuilderInterface;
@@ -38,14 +39,60 @@ class ParticipantsController extends AbstractController
                         'type' => 'string',
                         'order' => 'ASC'
                     ],
-                    'nom_prenoms' => [
-                        'title' => 'Nom(s) & Prénom(s)',
+                    'nom' => [
+                        'title' => 'Nom',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC',
+                        'search' => true
+                    ],
+                    'prenoms' => [
+                        'title' => 'Prénoms',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC',
+                        'search' => true
+                    ],
+                    'mail' => [
+                        'title' => 'Adresse mail',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC',
+                        'search' => true
+                    ],
+                    'telephone' => [
+                        'title' => 'Téléphone',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC',
+                        'search' => true
+                    ],
+                    'gender' => [
+                        'title' => 'Genre',
                         'display' => true,
                         'type' => 'string',
                         'order' => 'ASC'
                     ],
-                    'mail' => [
-                        'title' => 'Adresse mail',
+                    'fonction' => [
+                        'title' => 'Fonction',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC'
+                    ],
+                    'entreprise' => [
+                        'title' => 'Fonction',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC'
+                    ],
+                    'horaire' => [
+                        'title' => 'Horaire',
+                        'display' => true,
+                        'type' => 'string',
+                        'order' => 'ASC'
+                    ],
+                    'secteur' => [
+                        'title' => 'Secteur',
                         'display' => true,
                         'type' => 'string',
                         'order' => 'ASC'
@@ -67,10 +114,17 @@ class ParticipantsController extends AbstractController
                     function (Participants $Participants) {
                         return [
                             'id' => $Participants->getId() . '',
-                            'nom_prenoms' => $Participants->getNoms(),
+                            'nom' => $Participants->getNom(),
+                            'prenoms' => $Participants->getPrenoms(),
                             'mail' => $Participants->getMail(),
+                            'telephone' => $Participants->getTelephone(),
+                            'gender' => $Participants->isGender() ? 'Homme' : 'Femme',
+                            'fonction' => $Participants->getFonction(),
+                            'entreprise' => $Participants->getEntreprise(),
+                            'horaire' => $Participants->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                            'secteur' => $Participants->getSecteur(),
                             'currentState' => [
-                                'label' => $Participants->isIsScanned() ? 'Scanné' . ' le ' . $Participants->getScannedAt()->format('d/m/Y à H:i:s') : 'Non scanné',
+                                'label' => ($Participants->isIsScanned() ? 'Scanné' : 'Non scanné') . ' - ' . ($Participants->getHoraire() == 'morning' ? 'Matin' : 'Après-midi'),
                                 'color' => $Participants->isIsScanned() ? 'success' : 'default'
                             ],
                             'subbedAt' => $Participants->getCreatedAt()->format('d/m/Y à H:i:s'),
@@ -128,7 +182,8 @@ class ParticipantsController extends AbstractController
             Response::HTTP_OK,
             [
                 'Content-Type' => 'image/png',
-                'Content-Disposition' => 'attachment; filename="' .  str_replace(' ', '-', strtolower($participant->getNoms()))
+                'Content-Disposition' => 'attachment; filename="' .
+                    str_replace(' ', '-', strtolower($participant->getNom() . ' ' . $participant->getPrenoms()))
                     . '-' . $participant->getId() . '.png"'
             ]
         );
@@ -146,7 +201,7 @@ class ParticipantsController extends AbstractController
             json_encode(
                 [
                     'id' => $participant->getId() . '',
-                    'nom_prenoms' => $participant->getNoms(),
+                    'nom_prenoms' => $participant->getNom() . ' ' . $participant->getPrenoms(),
                     'mail' => $participant->getMail(),
                     'qr' => $qrCode,
                     'currentState' => [
@@ -154,7 +209,36 @@ class ParticipantsController extends AbstractController
                         'color' => $participant->isIsScanned() ? 'success' : 'default'
                     ],
                     'subbedAt' => $participant->getCreatedAt()->format('d/m/Y à H:i:s'),
-                    'addFields' => $participant->getAddFields(),
+                    'addFields' => [
+                        'fonction' => [
+                            'name' => 'Fonction',
+                            'value' => $participant->getFonction(),
+                        ],
+                        'entreprise' => [
+                            'name' => 'Entreprise',
+                            'value' => $participant->getEntreprise(),
+                        ],
+                        'secteur' => [
+                            'name' => 'Secteur',
+                            'value' => $participant->getSecteur(),
+                        ],
+                        'gender' => [
+                            'name' => 'Genre',
+                            'value' => $participant->isGender() ? 'Homme' : 'Femme',
+                        ],
+                        'telephone' => [
+                            'name' => 'Téléphone',
+                            'value' => $participant->getTelephone(),
+                        ],
+                        'isNotified' => [
+                            'name' => 'Notification',
+                            'value' => $participant->isIsMailSended() ? 'QR Envoyé' : 'QR Non envoyé',
+                        ],
+                        'horaire' => [
+                            'name' => 'Horaire',
+                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                        ],
+                    ],
                     'isNotified' => $participant->isIsMailSended(),
                 ]
             )
@@ -171,29 +255,70 @@ class ParticipantsController extends AbstractController
     ): Response
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet
+            ->getProperties()
+            ->setCreator('TicketGo')
+            ->setTitle('Rapport - LES CONFERENCES RISQUES PAYS BLOOMFIELD INVESTMENT CORPORATION')
+            ->setSubject('Rapport - LES CONFERENCES RISQUES PAYS BLOOMFIELD INVESTMENT CORPORATION')
+            ->setDescription('
+             Fichier Excel généré par TicketGo
+            ');
         $sheet = $spreadsheet->getActiveSheet();
+        // Create a red background color for the first row, text in white
+        $sheet->getStyle('A1:M1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FF0000');
+        $sheet->getStyle('A1:M1')->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE);
         $sheet->setCellValue('A1', 'ID');
-        $sheet->setCellValue('B1', 'Nom(s) & Prénom(s)');
-        $sheet->setCellValue('C1', 'Adresse mail');
-        $sheet->setCellValue('D1', 'Etat actuel');
-        $sheet->setCellValue('E1', 'Date d\'inscription');
-        $sheet->setCellValue('F1', 'Champs additionnels');
-        $sheet->setCellValue('G1', 'Date de scan');
-        $sheet->setCellValue('H1', 'QR Code');
+        $sheet->setCellValue('B1', 'Nom');
+        $sheet->setCellValue('C1', 'Prénoms');
+        $sheet->setCellValue('D1', 'Fonction');
+        $sheet->setCellValue('E1', 'Entreprise');
+        $sheet->setCellValue('F1', 'Email');
+        $sheet->setCellValue('G1', 'Téléphone');
+        $sheet->setCellValue('H1', 'Secteur');
+        $sheet->setCellValue('I1', 'Genre');
+        $sheet->setCellValue('J1', 'Horaire');
+        $sheet->setCellValue('K1', 'Scanné');
+        $sheet->setCellValue('L1', 'Date de scan');
+        $sheet->setCellValue('M1', 'Heure de scan');
 
         $i = 2;
+        $scannedPerHour = [];
         foreach ($participantsRepository->findAll() as $participant) {
             $sheet->setCellValue('A' . $i, $participant->getId());
-            $sheet->setCellValue('B' . $i, $participant->getNoms());
-            $sheet->setCellValue('C' . $i, $participant->getMail());
-            $sheet->setCellValue('D' . $i, $participant->isIsScanned() ? 'Scanné' . ' le ' . $participant->getScannedAt()->format('d/m/Y à H:i:s') : 'Non scanné');
-            $sheet->setCellValue('E' . $i, $participant->getCreatedAt()->format('d/m/Y à H:i:s'));
-            $sheet->setCellValue('F' . $i, json_encode($participant->getAddFields()));
-            $sheet->setCellValue('G' . $i, $participant->isIsScanned() ? $participant->getScannedAt()->format('d/m/Y à H:i:s') : 'Pas encore scanné');
-            // Lien vers le QR code
-            $sheet->setCellValue('H' . $i, $router->generate('api_app_participants_qr', ['id' => $participant->getId()], UrlGeneratorInterface::ABSOLUTE_URL));
+            $sheet->setCellValue('B' . $i, $participant->getNom());
+            $sheet->setCellValue('C' . $i, $participant->getPrenoms());
+            $sheet->setCellValue('D' . $i, $participant->getFonction());
+            $sheet->setCellValue('E' . $i, $participant->getEntreprise());
+            $sheet->setCellValue('F' . $i, $participant->getMail());
+            // Format phone number to not be displayed as a number
+            $sheet->setCellValueExplicit('G' . $i, $participant->getTelephone(), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('H' . $i, $participant->getSecteur());
+            $sheet->setCellValue('I' . $i, $participant->isGender() ? 'Homme' : 'Femme');
+            $sheet->setCellValue('J' . $i, $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi');
+            $sheet->setCellValue('K' . $i, $participant->isIsScanned() ? 'Oui' : 'Non');
+            $sheet->setCellValue('L' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('d/m/Y') : '');
+            $sheet->setCellValue('M' . $i, $participant->getScannedAt() ? $participant->getScannedAt()->format('H:i:s') : '');
+
+            // Store user scanned per hour for bar chart
+            $hour = $participant->getScannedAt() ? $participant->getScannedAt()->format('H') : '';
+            if (isset($scannedPerHour[$hour])) {
+                $scannedPerHour[$hour]++;
+            } else {
+                $scannedPerHour[$hour] = 1;
+            }
+
             $i++;
         }
+
+        // Draw bar chart on second sheet, scanned participants by hour
+        $sheet2 = $spreadsheet->createSheet();
+        $sheet2->setTitle('Participants scannés par heure');
+        $sheet2->fromArray(
+
+
+
+
+
 
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('participants.xlsx');
@@ -217,6 +342,7 @@ class ParticipantsController extends AbstractController
         EntityManagerInterface $entityManager,
         ParticipantsRepository $participantsRepository,
         ValidatorInterface $validator,
+        CreateParticipantService $createParticipantService,
     ): Response
     {
         $file = $request->files->get('file');
@@ -239,17 +365,20 @@ class ParticipantsController extends AbstractController
 
             $participants = [];
             for ($i = 2; $i <= $highestRow; $i++) {
-                $participant = new Participants();
-                $participant->setNoms($sheet->getCell('B' . $i)->getValue());
-                $participant->setMail($sheet->getCell('C' . $i)->getValue());
-                $participant->setAddFields(json_decode($sheet->getCell('D' . $i)->getValue(), true));
-                $participant->setQr(
-                    // Uuid v4
-                    Uuid::v4()
+                dump($sheet->getCell('I' . $i)->getValue());
+                $participant = ($createParticipantService)(
+                    [
+                        'nom' => $sheet->getCell('A' . $i)->getValue(),
+                        'prenoms' => $sheet->getCell('B' . $i)->getValue(),
+                        'fonction' => $sheet->getCell('C' . $i)->getValue(),
+                        'entreprise' => $sheet->getCell('D' . $i)->getValue(),
+                        'mail' => $sheet->getCell('E' . $i)->getValue(),
+                        'telephone' => $sheet->getCell('F' . $i)->getValue(),
+                        'secteur' => $sheet->getCell('G' . $i)->getValue(),
+                        'gender' => $sheet->getCell('H' . $i)->getValue() === 'H',
+                        'horaire' => 'morning',
+                    ]
                 );
-                $participant->setIsScanned(false);
-                $participant->setCreatedAt(new \DateTimeImmutable());
-                $participant->setScannedAt(null);
 
                 $errors = $validator->validate($participant);
                 if (count($errors) > 0) {
@@ -337,9 +466,38 @@ class ParticipantsController extends AbstractController
             json_encode(
                 [
                     'id' => $participant->getId(), // For debug purpose
-                    'nom_prenom' => $participant->getNoms(),
+                    'nom_prenom' => $participant->getNom() . ' ' . $participant->getPrenoms(),
                     'mail' => $participant->getMail(),
-                    'champs_additionnels' => $participant->getAddFields(),
+                    'champs_additionnels' => [
+                        'fonction' => [
+                            'name' => 'Fonction',
+                            'value' => $participant->getFonction(),
+                        ],
+                        'entreprise' => [
+                            'name' => 'Entreprise',
+                            'value' => $participant->getEntreprise(),
+                        ],
+                        'secteur' => [
+                            'name' => 'Secteur',
+                            'value' => $participant->getSecteur(),
+                        ],
+                        'gender' => [
+                            'name' => 'Genre',
+                            'value' => $participant->isGender() ? 'Homme' : 'Femme',
+                        ],
+                        'telephone' => [
+                            'name' => 'Téléphone',
+                            'value' => $participant->getTelephone(),
+                        ],
+                        'isNotified' => [
+                            'name' => 'Notification',
+                            'value' => $participant->isIsMailSended() ? 'QR Envoyé' : 'QR Non envoyé',
+                        ],
+                        'horaire' => [
+                            'name' => 'Horaire',
+                            'value' => $participant->getHoraire() === 'morning' ? 'Matin' : 'Après-midi',
+                        ],
+                    ],
                     'is_scanned' => $participant->isIsScanned() ? 'Scanné' : 'Non scanné',
                     'scanned_at' => $participant->getScannedAt() ? $participant->getScannedAt()->format('d/m/Y à H:i:s') : null,
                 ]
@@ -429,6 +587,19 @@ class ParticipantsController extends AbstractController
             if ($participant->isIsMailSended()) {
                 $participantsScannedCount++;
             }
+        }
+
+        if($participantsCount == 0)
+        {
+            return new Response(
+                json_encode(
+                    [
+                        'is_done' => true,
+                        'result' => 'Aucun participant'
+                    ]
+                )
+                , Response::HTTP_OK, ['Content-Type' => 'application/json']
+            );
         }
 
         return new Response(

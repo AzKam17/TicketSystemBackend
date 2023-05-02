@@ -23,6 +23,10 @@ export default function Table({ data, consultFnc }) {
 	);
 	const [localData, setLocalData] = React.useState(data || { data: [] });
 	const [currentItems, setCurrentItems] = React.useState([]);
+	// Contenue de la barre de recherche
+	const [search, setSearch] = React.useState('');
+	// Champs qui seront utilisés pour la recherche
+	const [searchField, setSearchField] = React.useState([]);
 
 	useEffect(() => {
 		initData(localData);
@@ -52,6 +56,27 @@ export default function Table({ data, consultFnc }) {
 			}
 		}
 	}, [data]);
+
+	useEffect(() => {
+		/*
+		*  Parcourir les propriétés de l'objet headers
+		*  Chaque propriété est un objet avec une propriété search
+		*  Si search existe et est true, ajouter le nom de la propriété à un tableau
+		*  sinon, ne rien faire
+		*  Ces propriétés seront utilisées pour la recherche
+		*/
+		let searchFields = [];
+		Object.keys(headers).forEach((key) => {
+			if (headers[key].search) {
+				searchFields.push(key);
+			}
+		});
+		setSearchField(searchFields);
+	}, [headers]);
+
+	useEffect(() => {
+		sortDataBySearchField(search);
+	}, [search]);
 
 	const menuColumns = () => {
 		setDisplayColumnsSelector(!displayColumnsSelector);
@@ -190,13 +215,53 @@ export default function Table({ data, consultFnc }) {
 		});
 	};
 
+	const sortDataBySearchField = (searchValue) => {
+		if (!searchValue) {
+			initData(data);
+			return;
+		}
+
+		const regex = new RegExp(searchValue, 'i');
+
+		const filteredData = localData.data.filter((item) => {
+			for (let i = 0; i < searchField.length; i++) {
+				const prop = searchField[i];
+				if (regex.test(item[prop])) {
+					return true; // Found match in this item, return true to keep it in filteredData
+				}
+			}
+			return false; // No match found in this item, exclude it from filteredData
+		});
+
+		initData({
+			title: localData.title,
+			count: filteredData.length,
+			headers: localData.headers,
+			filters: localData.filters,
+			data: filteredData,
+		});
+	};
+
+
 	return (
 		<div className="bg-white shadow-lg rounded-sm border border-slate-200 relative">
 			<header className="px-5 py-4">
 				<h2 className="font-semibold text-slate-800">
 					{title}{' '}
 					<span className="text-slate-400 font-medium">{count}</span>
+
+					{/* Input box to search */}
 				</h2>
+				<div className="mt-4 relative">
+					<input
+						type="text"
+						name="search"
+						id="search"
+						className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+						placeholder="Rechercher"
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
 				{/* Dropdown  checkboxes representing the table filters and columns, use checkboxes */}
 				<div className="absolute top-0 right-0 mt-3 mr-3 flex flex-row gap-5">
 					<div className="relative inline-block text-left">
